@@ -1,7 +1,15 @@
 const dotenv = require('dotenv');
 const fast2sms = require('fast-two-sms');
+const nodemailer = require('nodemailer');
+const sendinblueTransport = require('nodemailer-sendinblue-transport');
+
 dotenv.config();
 
+const transporter = nodemailer.createTransport(
+  new sendinblueTransport({
+    apiKey: process.env.SNB_API_KEY,
+  })
+  );
 
 const accountSid = process.env.ACCOUNT_SID;
 const authToken = process.env.AUTH_TOKEN;
@@ -12,7 +20,7 @@ const client = require('twilio')(accountSid, authToken);
 const messagebird = require('messagebird').initClient(process.env.MESSAGEBIRD_API_KEY);
 
 class UserController {
-    static userLogin =(req,res) => {    
+    static sendMessage =(req,res) => {    
       const otp = Math.floor(100000 + Math.random() * 900000);
 
     //   var params = {
@@ -55,6 +63,22 @@ class UserController {
     console.log(error);
     return res.json({error: error.message})
   })
+    }
+
+    static sendEmail = (req,res,next) => {
+
+      transporter.sendMail({
+        to: req.body.email,
+        from: 'SmsKissan@contact.com',
+        subject: 'Email from kissan network!',
+        text: req.body.message,
+        html: `<h1>${req.body.message}</h1>`                
+      }).then(response=> {
+        res.json({message: 'Email sent successfully!'})
+      }).catch(error => {
+        console.log(error)
+      })
+      
     }
 }
 
